@@ -1,0 +1,11 @@
+# Кэш Python и скомпилированный байт-код
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Кэш тестов pytest
+.pytest_cache/
+
+# Окружения Conda/virtualenv (на всякий случай)
+.venv/
+env/
