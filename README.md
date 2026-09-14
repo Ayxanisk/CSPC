@@ -1,4 +1,8 @@
-# PW1 --- Lab A Report
+## PW1 - Lab A: Reproducible Foundations
+
+**What I built:**
+- Built a radioactive decay simulation using pure Python loops and vectorized NumPy code.
+- Set up conda environment tracking, .gitignore rules, and full Git workflow.
 
 ## Results & Performance Comparison
 - **N0**: 200,000 atoms
@@ -6,9 +10,11 @@
 - **NumPy execution time**:          0.0003 seconds
 - **Speed-up factor**: 42860.36x faster than pure-Python loop
 
-## Test Suite Status
-- Ran `pytest -v`
-- All 3 tests passed (`test_starts_at_N0`, `test_rejects_negative_rate`, `test_matches_law`).
+**Tests:** all passing? yes
 
-## Conclusion
-Vectorized operations in NumPy outperform standard Python loops by orders of magnitude when simulating radioactive decay for large particle sets.
+**Conclusion:**
+- Vectorized operations with NumPy dramatically increase execution speed compared to standard Python loops.
+- Automated unit tests with pytest ensure code correctness, while Conda environment files maintain reproducibility across different machines.
+
+**Reproducibility test (Stretch Goal):**
+- Tested code on a partner's machine: environment built seamlessly without modifications, and all pytest cases passed without errors.
