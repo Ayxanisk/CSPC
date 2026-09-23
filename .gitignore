@@ -9,3 +9,6 @@ __pycache__/
 # Окружения Conda/virtualenv (на всякий случай)
 .venv/
 env/
+
+.snakemake/
+figure.png
