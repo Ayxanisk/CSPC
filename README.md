@@ -18,3 +18,8 @@
 
 **Reproducibility test (Stretch Goal):**
 - Tested code on a partner's machine: environment built seamlessly without modifications, and all pytest cases passed without errors.
+
+## PW1 Lab B
+**What the data showed:** The data demonstrates an exponential decay process over time, with the count decreasing rapidly at first and then leveling off. 
+**Match with analytical law:** The observed data points closely match the analytical decay curve ($N_{0}e^{-\lambda t}$), confirming that the analytical law accurately describes the observed phenomenon.
+**Snakemake Pipeline:** The Snakemake pipeline automates the generation of the plot, ensuring `figure.png` is only rebuilt if the input dataset (`decay_observed.csv`) or the python script (`plot.py`) changes.x
