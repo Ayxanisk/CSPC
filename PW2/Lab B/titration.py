@@ -6,11 +6,15 @@ The equivalence point is the volume where the pH changes fastest (the steep
 jump). Numerically, that is where the SLOPE of the pH curve is largest.
 Run:  python titration.py
 """
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 
+HERE = Path(__file__).resolve().parent
+
 # TODO 1: read titration.csv (columns volume_base, pH) into arrays V, pH.
-data = np.genfromtxt("titration.csv", delimiter=",", names=True)
+data = np.genfromtxt(HERE / "titration.csv", delimiter=",", names=True)
 V = data["volume_base"]
 pH = data["pH"]
 
@@ -49,5 +53,5 @@ ax2.grid(True, linestyle=":", alpha=0.6)
 ax2.legend()
 
 plt.tight_layout()
-plt.savefig("titration.png", dpi=300)
+plt.savefig(HERE / "titration.png", dpi=300)
 plt.close()
