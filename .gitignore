@@ -12,3 +12,7 @@ env/
 
 .snakemake/
 figure.png
+
+image.png
+img.png
+test.py
