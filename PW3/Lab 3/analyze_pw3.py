@@ -6,62 +6,45 @@ Run from the repository root with the ``cspc`` environment active:
 Expected inputs beside this script: heart.csv and chemicals_cancer.csv.
 """
 
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import stats
 
 
-HERE = Path(__file__).resolve().parent
 CONTINUOUS = ["age", "chol", "trestbps", "thalach"]
 
-
-def check_file(path):
-    if not path.exists():
-        raise FileNotFoundError(
-            f"Missing {path.name}. Put the Moodle dataset next to {Path(__file__).name}."
-        )
-
-
 def heart_analysis():
-    path = HERE / "heart.csv"
-    check_file(path)
-    df = pd.read_csv(path)
-    required = set(CONTINUOUS + ["target"])
-    missing = required - set(df.columns)
-    if missing:
-        raise ValueError(f"heart.csv is missing columns: {sorted(missing)}")
-
-    print("HEART DATA")
+    df = pd.read_csv("heart.csv")
+    print("--------------------------HEART DATA--------------------------")
+    print("---------------")
     print("Shape:", df.shape)
+    print("---------------")
     print(df.head(), "\n")
     print(df[CONTINUOUS].describe(), "\n")
 
-    fig, axes = plt.subplots(2, 2, figsize=(10, 7))
-    for ax, column in zip(axes.flat, CONTINUOUS):
+    hist_fig, hist_axes = plt.subplots(2, 2, figsize=(10, 7))
+    qq_fig, qq_axes = plt.subplots(2, 2, figsize=(10, 7))
+
+    for hist_ax, qq_ax, column in zip(hist_axes.flat, qq_axes.flat, CONTINUOUS):
         values = df[column].dropna()
-        ax.hist(values, bins="auto", edgecolor="white")
-        ax.set(title=column, xlabel=column, ylabel="Count")
-        # Shapiro-Wilk is limited to 5,000 observations; sample deterministically if needed.
-        test_values = values.sample(5000, random_state=1) if len(values) > 5000 else values
-        result = stats.shapiro(test_values)
+        hist_ax.hist(values, bins="auto", edgecolor="white")
+        hist_ax.set(title=column, xlabel=column, ylabel="Count")
+                        
+        stats.probplot(values, dist="norm", plot=qq_ax)
+        qq_ax.set_title(f"Normal Q-Q: {column}")
+
+        result = stats.shapiro(values)
         print(f"{column}: Shapiro W={result.statistic:.4f}, p={result.pvalue:.4g}")
         print(f"  skew={stats.skew(values):.3f}; inspect histogram and QQ plot as well")
-    fig.tight_layout()
-    fig.savefig(HERE / "heart_distributions.png", dpi=180)
-    plt.close(fig)
 
-    # QQ plots supplement the Shapiro test: a tiny p-value alone can flag trivial
-    # departures from normality in a large sample.
-    fig, axes = plt.subplots(2, 2, figsize=(10, 7))
-    for ax, column in zip(axes.flat, CONTINUOUS):
-        stats.probplot(df[column].dropna(), dist="norm", plot=ax)
-        ax.set_title(f"Normal Q-Q: {column}")
-    fig.tight_layout()
-    fig.savefig(HERE / "heart_qqplots.png", dpi=180)
-    plt.close(fig)
+    hist_fig.tight_layout()
+    hist_fig.savefig("heart_distributions.png", dpi=180)
+    plt.close(hist_fig)
+
+    qq_fig.tight_layout()
+    qq_fig.savefig("heart_qqplots.png", dpi=180)
+    plt.close(qq_fig)
 
     diseased = df.loc[df.target == 1, "thalach"].dropna()
     healthy = df.loc[df.target == 0, "thalach"].dropna()
@@ -93,7 +76,7 @@ def heart_analysis():
     ax.bar([item[0] for item in group_summaries], means, yerr=errors, capsize=6, color=["#4472C4", "#ED7D31"])
     ax.set(ylabel="Maximum heart rate (thalach)", title="Mean thalach with 95% confidence intervals")
     fig.tight_layout()
-    fig.savefig(HERE / "thalach_by_target.png", dpi=180)
+    fig.savefig("thalach_by_target.png", dpi=180)
     plt.close(fig)
 
     pair = df[["age", "thalach"]].dropna()
@@ -103,7 +86,7 @@ def heart_analysis():
     ax.scatter(pair.age, pair.thalach, alpha=0.65, edgecolors="none")
     ax.set(xlabel="Age (years)", ylabel="Maximum heart rate", title=f"Age vs thalach (Spearman rho={rho:.2f})")
     fig.tight_layout()
-    fig.savefig(HERE / "age_vs_thalach.png", dpi=180)
+    fig.savefig("age_vs_thalach.png", dpi=180)
     plt.close(fig)
 
     proportions = df.target.value_counts(normalize=True)
@@ -111,23 +94,8 @@ def heart_analysis():
     print(f"\nBONUS target entropy: {entropy:.4f} bits (maximum 1 bit for two balanced classes)")
 
 
-def residual_correlation(data, x, y, controls):
-    """Partial Pearson correlation after linear adjustment for control columns."""
-    values = data[[x, y] + controls].dropna()
-    design = np.column_stack([np.ones(len(values)), values[controls].to_numpy()])
-    residual_x = values[x].to_numpy() - design @ np.linalg.lstsq(design, values[x].to_numpy(), rcond=None)[0]
-    residual_y = values[y].to_numpy() - design @ np.linalg.lstsq(design, values[y].to_numpy(), rcond=None)[0]
-    r = stats.pearsonr(residual_x, residual_y).statistic
-    degrees_of_freedom = len(values) - len(controls) - 2
-    t_statistic = r * np.sqrt(degrees_of_freedom / (1 - r**2))
-    p_value = 2 * stats.t.sf(abs(t_statistic), degrees_of_freedom)
-    return r, p_value
-
-
 def chemical_analysis():
-    path = HERE / "chemicals_cancer.csv"
-    check_file(path)
-    df = pd.read_csv(path)
+    df = pd.read_csv("chemicals_cancer.csv")
     print("\nCHEMICAL EXPOSURE DATA")
     print("Shape:", df.shape)
     print(df.describe(), "\n")
@@ -135,12 +103,7 @@ def chemical_analysis():
         r, p = stats.pearsonr(df[chemical], df.malignancy)
         print(f"Naive {chemical} vs malignancy: Pearson r={r:.4f}, p={p:.3g}")
 
-    controls = ["pollution_index", "age"]
-    for chemical in ["benzene", "cadmium"]:
-        r, p = residual_correlation(df, chemical, "malignancy", controls)
-        print(f"Adjusted for pollution_index and age, {chemical}: partial r={r:.4f}, p={p:.3g}")
-
-    # Compare patients in a narrow pollution-index band to reduce confounding.
+    # Hold pollution index approximately constant by keeping only a narrow band.
     subset = df[df.pollution_index.between(45, 55)]
     print(f"\nPollution-index 45-55 slice (n={len(subset)}):")
     for chemical in ["benzene", "cadmium"]:
@@ -152,13 +115,10 @@ def chemical_analysis():
         ax.scatter(df[chemical], df.malignancy, c=df.pollution_index, cmap="viridis", alpha=0.7, edgecolors="none")
         ax.set(xlabel=chemical, ylabel="Malignancy", title=f"{chemical} vs malignancy")
     fig.tight_layout()
-    fig.savefig(HERE / "chemical_associations.png", dpi=180)
+    fig.savefig("chemical_associations.png", dpi=180)
     plt.close(fig)
 
 
 if __name__ == "__main__":
-    if (HERE / "heart.csv").exists():
-        heart_analysis()
-    else:
-        print("heart.csv is missing; skipping heart-dataset analysis for now.")
+    heart_analysis()
     chemical_analysis()
